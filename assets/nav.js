@@ -26,3 +26,35 @@
     });
   });
 })();
+
+
+// Contact Us dropdown: click to open, click outside or Escape to close.
+(function () {
+  var btn = document.getElementById('connectBtn');
+  var menu = document.getElementById('connectMenu');
+  if (!btn || !menu) return;
+
+  function open() {
+    menu.hidden = false;
+    btn.setAttribute('aria-expanded', 'true');
+    document.addEventListener('click', onOutside, true);
+    document.addEventListener('keydown', onKey);
+  }
+  function close(refocus) {
+    menu.hidden = true;
+    btn.setAttribute('aria-expanded', 'false');
+    document.removeEventListener('click', onOutside, true);
+    document.removeEventListener('keydown', onKey);
+    if (refocus) btn.focus();
+  }
+  function onOutside(e) {
+    if (!menu.contains(e.target) && e.target !== btn) close(false);
+  }
+  function onKey(e) {
+    if (e.key === 'Escape') close(true);
+  }
+  btn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    menu.hidden ? open() : close(false);
+  });
+})();

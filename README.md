@@ -42,16 +42,25 @@ git push -u origin main
 
 Then do steps 3 to 5 above.
 
-## Turning the hero video on
+## Swapping the hero photo, or moving to video
 
-Right now the hero shows a court graphic standing in for footage. Once you have the clip:
+The hero is now split: navy panel with the headline on the left, photo on the right. To change the photo, replace `assets/hero.jpg`. Anything roughly 1200 x 1150 or larger works, and `object-fit: cover` handles the cropping.
 
-1. Export the video as `hero.mp4`, 1080p, 16:9, 20 seconds, no audio track. Keep it under about 8 MB so it loads fast.
-2. Export one frame as `hero-poster.jpg`, same dimensions.
-3. Put both in `assets/`.
-4. Open `index.html`, find the block that starts `<!-- TO TURN ON THE VIDEO`, delete the three placeholder divs below it (`hero__glow`, the `svg`, and `hero__ball`), and uncomment the `<video>` block.
+If you later want the right half to be video instead of a still, replace the `<img class="hero__photo">` in `index.html` with:
 
-The scrim over the video is already set up so the headline and the two doors stay readable. If your footage is very bright, raise the scrim opacity in `styles.css` under `.hero__scrim`.
+```html
+<video class="hero__photo" autoplay muted loop playsinline poster="assets/hero.jpg">
+  <source src="assets/hero.mp4" type="video/mp4">
+</video>
+```
+
+No CSS changes needed, `.hero__photo` already handles the sizing. Keep the clip under 20 seconds and around 8 MB, and keep `hero.jpg` in place as the poster so there is always a fallback.
+
+## The Contact Us menu
+
+The header button opens a dropdown with four rows: call Tyson, call West Hills, email, Facebook. Click outside or press Escape to close it. Phone numbers are `tel:` links, so they dial straight from a phone.
+
+To change what is in it, edit the `.connect__menu` block in the header of each page. The behaviour lives at the bottom of `assets/nav.js`.
 
 ## Changing the brand colours
 
