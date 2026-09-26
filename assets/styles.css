@@ -191,13 +191,39 @@ h3 { font-size: 22px; font-weight: 700; line-height: 1.25; }
 
 /* ---------- hero ---------- */
 .hero { position: relative; background: var(--navy-deep); overflow: hidden; }
-.hero__photo {
+.hero__media {
   position: absolute;
   right: 0; top: 0;
   width: 47%;
   height: 100%;
+  overflow: hidden;
+}
+.hero__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(16, 20, 24, 0.51);
+  pointer-events: none;
+}
+.hero__photo {
+  display: block;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   object-position: center;
+}
+.hero__vidnote {
+  position: absolute;
+  z-index: 1;
+  right: 13%;
+  top: 43%;
+  margin: 0;
+  max-width: 150px;
+  font-size: 20px;
+  line-height: 22px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: #FFFFFF;
 }
 .hero__inner {
   position: relative;
@@ -417,7 +443,7 @@ table.classes .dot { display: inline-block; width: 12px; height: 12px; border-ra
 /* ---------- responsive ---------- */
 @media (min-width: 1500px) {
   :root { --pad: 72px; }
-  .hero__photo { width: 44%; }
+  .hero__media { width: 44%; }
   .hero__inner { min-height: 640px; }
   /* the extra room goes to the columns that were wrapping */
   .progrow { grid-template-columns: minmax(0, 1fr) 270px 180px 130px 150px; }
@@ -425,7 +451,7 @@ table.classes .dot { display: inline-block; width: 12px; height: 12px; border-ra
 
 @media (max-width: 1000px) {
   :root { --pad: 28px; }
-  .hero__photo { width: 40%; }
+  .hero__media { width: 40%; }
   .hero__inner { min-height: 480px; }
   .cards { grid-template-columns: 1fr; }
   .courtgrid, .notes, .howto, .pagehead__grid { grid-template-columns: 1fr; gap: 24px; }
@@ -470,7 +496,8 @@ table.classes .dot { display: inline-block; width: 12px; height: 12px; border-ra
   .connect__menu b { margin-left: auto; }
   .header__phone { display: none; }
   .hero__inner { padding-top: 40px; padding-bottom: 36px; min-height: 0; }
-  .hero__photo { position: static; width: 100%; height: 230px; }
+  .hero__media { position: relative; width: 100%; height: 230px; }
+  .hero__vidnote { font-size: 16px; line-height: 19px; max-width: 128px; right: 8%; top: 50%; transform: translateY(-50%); }
   .doors { flex-direction: column; gap: 0; }
   .door + .door { padding-left: 0; margin-top: 4px; }
   .door__name { font-size: 28px; }
