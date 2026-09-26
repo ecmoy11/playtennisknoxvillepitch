@@ -73,6 +73,19 @@
   </div>
 </section>
 
+<section class="wrap bio" style="padding-top:8px;padding-bottom:40px">
+  <div class="bio__photo">
+    <span>Placeholder for a photo of Deidra on court</span>
+  </div>
+  <div>
+    <p class="label">The person who runs it</p>
+    <h2>Deidra Dunn</h2>
+    <p>Deidra is the City Tennis Director. She and her staff teach a full slate of classes and clinics every week, from two-year-olds swinging at a foam ball with a parent on court, to adults who have never held a racquet and are quietly nervous about it.</p>
+    <p><strong>The through line is the same at every age.</strong> Tennis is a game you can play your whole life, so the job is to get people started and keep them going. That is why the first step is cheap and low-stakes, why the groups are built around what you can actually do rather than how old you are, and why there is always a next rung once you are ready for it.</p>
+    <p>[Add a line or two here about how long Deidra has been in the role and her own playing background.]</p>
+  </div>
+</section>
+
 <section class="quote" style="margin-top:12px">
   <figure class="wrap quote__inner" style="margin:0">
     <span class="quote__mark" aria-hidden="true">&ldquo;</span>
@@ -139,27 +152,59 @@
       <p class="connectband__lede">Call either center during opening hours and a person picks up. Email if it is easier, and we usually come back the same day.</p>
     </div>
 
-    <div class="connectband__grid">
-      <a class="connectrow" href="tel:8655223303">
-        <span class="connectrow__label">Call Tyson</span>
-        <b>865-522-3303</b>
-        <span class="connectrow__arrow" aria-hidden="true">&rarr;</span>
-      </a>
-      <a class="connectrow" href="tel:8653570720">
-        <span class="connectrow__label">Call West Hills</span>
-        <b>865-357-0720</b>
-        <span class="connectrow__arrow" aria-hidden="true">&rarr;</span>
-      </a>
-      <a class="connectrow" href="mailto:citytennisace@gmail.com">
-        <span class="connectrow__label">Email</span>
-        <b>citytennisace@gmail.com</b>
-        <span class="connectrow__arrow" aria-hidden="true">&rarr;</span>
-      </a>
-      <a class="connectrow" href="https://www.facebook.com/Play-Tennis-Knoxville-131443933598285/">
-        <span class="connectrow__label">Facebook</span>
-        <b>Play Tennis Knoxville</b>
-        <span class="connectrow__arrow" aria-hidden="true">&rarr;</span>
-      </a>
+    <div class="connectband__body">
+      <div class="connectband__grid">
+        <a class="connectrow" href="tel:8655223303">
+          <span class="connectrow__label">Call Tyson</span>
+          <b>865-522-3303</b>
+          <span class="connectrow__arrow" aria-hidden="true">&rarr;</span>
+        </a>
+        <a class="connectrow" href="tel:8653570720">
+          <span class="connectrow__label">Call West Hills</span>
+          <b>865-357-0720</b>
+          <span class="connectrow__arrow" aria-hidden="true">&rarr;</span>
+        </a>
+        <a class="connectrow" href="mailto:citytennisace@gmail.com">
+          <span class="connectrow__label">Email</span>
+          <b>citytennisace@gmail.com</b>
+          <span class="connectrow__arrow" aria-hidden="true">&rarr;</span>
+        </a>
+        <a class="connectrow" href="https://www.facebook.com/Play-Tennis-Knoxville-131443933598285/">
+          <span class="connectrow__label">Facebook</span>
+          <b>Play Tennis Knoxville</b>
+          <span class="connectrow__arrow" aria-hidden="true">&rarr;</span>
+        </a>
+      </div>
+
+      <form class="connectform" id="connectForm" novalidate>
+        <h3>Send us a message</h3>
+        <div class="connectform__row">
+          <label for="cf-name">Name</label>
+          <input id="cf-name" name="name" type="text" autocomplete="name" required>
+        </div>
+        <div class="connectform__row">
+          <label for="cf-email">Email</label>
+          <input id="cf-email" name="email" type="email" autocomplete="email" required>
+        </div>
+        <div class="connectform__row">
+          <label for="cf-topic">What is this about?</label>
+          <select id="cf-topic" name="topic">
+            <option>Junior lessons or camps</option>
+            <option>Adult classes</option>
+            <option>Leagues or tournaments</option>
+            <option>Courts, fees or reservations</option>
+            <option>Racquet stringing</option>
+            <option>Volunteering</option>
+            <option>Something else</option>
+          </select>
+        </div>
+        <div class="connectform__row">
+          <label for="cf-message">Message</label>
+          <textarea id="cf-message" name="message" rows="4" required></textarea>
+        </div>
+        <button class="btn btn--block" type="submit">Send message</button>
+        <p class="connectform__note" id="connectFormNote" role="status" hidden></p>
+      </form>
     </div>
 
     <div class="connectband__foot">

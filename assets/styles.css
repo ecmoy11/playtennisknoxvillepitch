@@ -471,7 +471,8 @@ table.classes .dot { display: inline-block; width: 12px; height: 12px; border-ra
 }
 .connectband__lede { font-size: 17px; line-height: 1.65; color: #DDE6F0; margin: 0; }
 
-.connectband__grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 56px; }
+.connectband__grid { display: flex; flex-direction: column; }
+.connectband__grid .connectrow { flex: 1 1 0; }
 .connectrow {
   display: flex;
   align-items: center;
@@ -481,7 +482,7 @@ table.classes .dot { display: inline-block; width: 12px; height: 12px; border-ra
   text-decoration: none;
   color: var(--cream);
 }
-.connectrow:last-child, .connectrow:nth-last-child(2) { border-bottom: 1px solid var(--navy-line); }
+.connectrow:last-child { border-bottom: 1px solid var(--navy-line); }
 .connectrow__label {
   flex: none;
   width: 156px;
@@ -510,6 +511,74 @@ table.classes .dot { display: inline-block; width: 12px; height: 12px; border-ra
 }
 .connectband__foot p { margin: 8px 0 0; font-size: 15px; line-height: 1.6; color: var(--on-navy); }
 
+
+/* ---------- director bio ---------- */
+.bio { display: grid; grid-template-columns: 300px 1fr; gap: 48px; align-items: start; padding-bottom: 8px; }
+.bio__photo {
+  aspect-ratio: 4 / 5;
+  border-radius: var(--radius);
+  background: var(--navy-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+.bio__photo span { font-size: 14px; font-weight: 700; line-height: 1.45; color: var(--on-navy); }
+.bio h2 { font-size: clamp(28px, 3vw, 38px); margin: 10px 0 0; }
+.bio p { font-size: 17px; line-height: 1.7; color: var(--muted); margin: 16px 0 0; max-width: 62ch; }
+.bio p strong { color: var(--ink); }
+
+/* ---------- connect form ---------- */
+.connectband__body { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: stretch; }
+.connectform h3 { color: var(--cream); font-size: 20px; margin: 0 0 4px; }
+.connectform__row { margin-top: 16px; }
+.connectform label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--chartreuse);
+  margin-bottom: 7px;
+}
+.connectform input,
+.connectform select,
+.connectform textarea {
+  width: 100%;
+  font: inherit;
+  font-size: 16px;
+  color: var(--cream);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--navy-line);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.connectform textarea { resize: vertical; min-height: 96px; }
+.connectform select { appearance: none; background-image: none; }
+.connectform select option { color: var(--ink); background: var(--white); }
+.connectform input:focus,
+.connectform select:focus,
+.connectform textarea:focus {
+  outline: 2px solid var(--chartreuse);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+.connectform input[aria-invalid="true"],
+.connectform textarea[aria-invalid="true"] { border-color: #E8806B; }
+.connectform .btn { margin-top: 22px; }
+.connectform__note {
+  margin: 14px 0 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--cream);
+  background: rgba(201, 217, 28, 0.13);
+  border-left: 3px solid var(--chartreuse);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 14px 16px;
+}
+.connectform__note a { color: var(--chartreuse); }
+
 @media (min-width: 1500px) {
   :root { --pad: 72px; }
   .hero__media { width: 44%; }
@@ -519,10 +588,11 @@ table.classes .dot { display: inline-block; width: 12px; height: 12px; border-ra
 }
 
 @media (max-width: 1000px) {
+  .bio { grid-template-columns: 220px 1fr; gap: 32px; }
+  .connectband__body { grid-template-columns: 1fr; gap: 44px; }
+  .connectband__grid .connectrow { flex: none; }
   .ladder--4 { grid-template-columns: repeat(2, 1fr); }
   .connectband__head { grid-template-columns: 1fr; gap: 20px; align-items: start; }
-  .connectband__grid { grid-template-columns: 1fr; gap: 0; }
-  .connectrow:nth-last-child(2) { border-bottom: 0; }
   .connectband__foot { grid-template-columns: 1fr 1fr; }
   :root { --pad: 28px; }
   .hero__media { width: 40%; }
@@ -542,6 +612,8 @@ table.classes .dot { display: inline-block; width: 12px; height: 12px; border-ra
 }
 
 @media (max-width: 760px) {
+  .bio { grid-template-columns: 1fr; gap: 24px; }
+  .bio__photo { aspect-ratio: 16 / 10; }
   .ladder--4 { grid-template-columns: 1fr; }
   .connectband { padding: 48px 0 44px; }
   .connectrow { flex-wrap: wrap; gap: 4px 14px; padding: 20px 0; }

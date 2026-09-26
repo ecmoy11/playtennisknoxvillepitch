@@ -58,3 +58,36 @@
     menu.hidden ? open() : close(false);
   });
 })();
+
+/* Connect form — prototype only. Validates, then says plainly that it is not
+   wired to anything yet rather than faking a success message. */
+(function () {
+  var form = document.getElementById('connectForm');
+  if (!form) return;
+  var note = document.getElementById('connectFormNote');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var missing = [];
+    ['cf-name', 'cf-email', 'cf-message'].forEach(function (id) {
+      var el = document.getElementById(id);
+      var bad = !el.value.trim() || (el.type === 'email' && !el.checkValidity());
+      el.setAttribute('aria-invalid', bad ? 'true' : 'false');
+      if (bad) missing.push(el);
+    });
+
+    if (missing.length) {
+      note.innerHTML = 'Please fill in your name, a valid email and a message.';
+      note.hidden = false;
+      missing[0].focus();
+      return;
+    }
+
+    var topic = document.getElementById('cf-topic').value;
+    note.innerHTML = 'This is a prototype, so the form is not connected to an inbox yet. ' +
+      'In the real build this would land in the tennis office inbox tagged &ldquo;' + topic + '&rdquo;. ' +
+      'For now, email <a href="mailto:citytennisace@gmail.com">citytennisace@gmail.com</a>.';
+    note.hidden = false;
+    note.focus && note.focus();
+  });
+})();
