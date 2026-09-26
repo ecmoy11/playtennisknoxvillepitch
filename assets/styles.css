@@ -15,7 +15,7 @@
   --tint: #ECF0DC;
   --on-navy: #B9C6D8;
 
-  --wrap: 1280px;
+  --wrap: 1600px;
   --pad: 56px;
   --radius: 6px;
   --shadow: 0 6px 20px rgba(0, 41, 90, 0.08);
@@ -58,7 +58,7 @@ a { color: var(--navy); }
 .label--light { color: var(--on-navy); }
 
 h1, h2, h3 { margin: 0; letter-spacing: -0.02em; }
-h1 { font-size: clamp(38px, 6vw, 68px); font-weight: 900; line-height: 0.98; }
+h1 { font-size: clamp(38px, 5.3vw, 76px); font-weight: 900; line-height: 0.98; }
 h2 { font-size: clamp(28px, 3.4vw, 40px); font-weight: 800; line-height: 1.1; color: var(--navy); }
 h3 { font-size: 22px; font-weight: 700; line-height: 1.25; }
 
@@ -208,15 +208,15 @@ h3 { font-size: 22px; font-weight: 700; line-height: 1.25; }
   padding-top: 56px;
   padding-bottom: 56px;
 }
-.hero__text { max-width: 600px; }
+.hero__text { max-width: 740px; }
 .hero h1 { color: var(--cream); margin: 20px 0 24px; }
-.hero__lede { font-size: 18px; line-height: 1.65; color: #DDE6F0; max-width: 520px; margin: 0 0 34px; }
+.hero__lede { font-size: 18px; line-height: 1.65; color: #DDE6F0; max-width: 560px; margin: 0 0 34px; }
 
 .doors { display: flex; gap: 0; }
 .door {
   flex: 1;
   border-top: 1px solid rgba(248, 248, 240, 0.35);
-  padding-top: 18px;
+  padding-top: 22px;
   text-decoration: none;
   display: block;
 }
@@ -226,7 +226,7 @@ h3 { font-size: 22px; font-weight: 700; line-height: 1.25; }
   display: flex;
   align-items: center;
   gap: 14px;
-  margin-top: 10px;
+  margin-top: 0;
   font-size: 34px;
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -415,6 +415,14 @@ table.classes .dot { display: inline-block; width: 12px; height: 12px; border-ra
 }
 
 /* ---------- responsive ---------- */
+@media (min-width: 1500px) {
+  :root { --pad: 72px; }
+  .hero__photo { width: 44%; }
+  .hero__inner { min-height: 640px; }
+  /* the extra room goes to the columns that were wrapping */
+  .progrow { grid-template-columns: minmax(0, 1fr) 270px 180px 130px 150px; }
+}
+
 @media (max-width: 1000px) {
   :root { --pad: 28px; }
   .hero__photo { width: 40%; }
