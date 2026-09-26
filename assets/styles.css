@@ -284,6 +284,7 @@ h3 { font-size: 22px; font-weight: 700; line-height: 1.25; }
   flex-direction: column;
   gap: 14px;
 }
+.card > .btn:last-child { margin-top: auto; }
 .card__top { display: flex; align-items: center; gap: 10px; }
 .card__kind { font: 700 11px/1 Archivo, sans-serif; letter-spacing: 0.13em; color: var(--muted); text-transform: uppercase; }
 .card h3 { color: var(--navy); font-size: 24px; font-weight: 800; }
@@ -313,6 +314,8 @@ h3 { font-size: 22px; font-weight: 700; line-height: 1.25; }
 .split { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; padding-top: 72px; padding-bottom: 72px; }
 .split > div + div { padding-left: 72px; border-left: 1px solid var(--rule); }
 .split h2 { margin: 10px 0 12px; }
+.split--3 { grid-template-columns: repeat(3, 1fr); gap: 32px; padding: 0; }
+.split--3 > div + div { padding-left: 0; border-left: 0; }
 .linklist { margin-top: 26px; border-top: 1px solid var(--rule); }
 .linkrow {
   display: flex;
@@ -441,6 +444,72 @@ table.classes .dot { display: inline-block; width: 12px; height: 12px; border-ra
 }
 
 /* ---------- responsive ---------- */
+
+/* ---------- adult ladder (4 rungs) ---------- */
+.ladder--4 { grid-template-columns: repeat(4, 1fr); }
+
+/* ---------- connect band ---------- */
+.connectband {
+  background: var(--navy-deep);
+  color: var(--on-navy);
+  padding: 72px 0 64px;
+  margin-top: 8px;
+}
+.connectband__head {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 56px;
+  align-items: end;
+  padding-bottom: 38px;
+}
+.connectband h2 {
+  color: var(--cream);
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 900;
+  line-height: 1.02;
+  margin: 14px 0 0;
+}
+.connectband__lede { font-size: 17px; line-height: 1.65; color: #DDE6F0; margin: 0; }
+
+.connectband__grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 56px; }
+.connectrow {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 24px 0;
+  border-top: 1px solid var(--navy-line);
+  text-decoration: none;
+  color: var(--cream);
+}
+.connectrow:last-child, .connectrow:nth-last-child(2) { border-bottom: 1px solid var(--navy-line); }
+.connectrow__label {
+  flex: none;
+  width: 156px;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--chartreuse);
+}
+.connectrow b {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+.connectrow__arrow { margin-left: auto; font-size: 20px; color: var(--chartreuse); transition: transform 0.18s ease; }
+.connectrow:hover b { color: var(--chartreuse); }
+.connectrow:hover .connectrow__arrow { transform: translateX(6px); }
+
+.connectband__foot {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  margin-top: 44px;
+}
+.connectband__foot p { margin: 8px 0 0; font-size: 15px; line-height: 1.6; color: var(--on-navy); }
+
 @media (min-width: 1500px) {
   :root { --pad: 72px; }
   .hero__media { width: 44%; }
@@ -450,12 +519,19 @@ table.classes .dot { display: inline-block; width: 12px; height: 12px; border-ra
 }
 
 @media (max-width: 1000px) {
+  .ladder--4 { grid-template-columns: repeat(2, 1fr); }
+  .connectband__head { grid-template-columns: 1fr; gap: 20px; align-items: start; }
+  .connectband__grid { grid-template-columns: 1fr; gap: 0; }
+  .connectrow:nth-last-child(2) { border-bottom: 0; }
+  .connectband__foot { grid-template-columns: 1fr 1fr; }
   :root { --pad: 28px; }
   .hero__media { width: 40%; }
   .hero__inner { min-height: 480px; }
   .cards { grid-template-columns: 1fr; }
   .courtgrid, .notes, .howto, .pagehead__grid { grid-template-columns: 1fr; gap: 24px; }
   .split { grid-template-columns: 1fr; gap: 40px; padding-top: 48px; padding-bottom: 48px; }
+  .split--3 { grid-template-columns: 1fr; gap: 32px; }
+  .split--3 > div + div { border-top: 1px solid var(--rule); padding-top: 28px; }
   .split > div + div { padding-left: 0; border-left: 0; border-top: 1px solid var(--rule); padding-top: 40px; }
   .ladder { grid-template-columns: repeat(2, 1fr); }
   .footer__grid { grid-template-columns: 1fr 1fr; gap: 32px; }
@@ -466,6 +542,12 @@ table.classes .dot { display: inline-block; width: 12px; height: 12px; border-ra
 }
 
 @media (max-width: 760px) {
+  .ladder--4 { grid-template-columns: 1fr; }
+  .connectband { padding: 48px 0 44px; }
+  .connectrow { flex-wrap: wrap; gap: 4px 14px; padding: 20px 0; }
+  .connectrow__label { width: auto; flex: 1 0 100%; white-space: normal; }
+  .connectrow b { font-size: 19px; }
+  .connectband__foot { grid-template-columns: 1fr; gap: 24px; }
   .nav-toggle {
     display: inline-flex; align-items: center; justify-content: center;
     width: 44px; height: 44px; border: 1px solid #D6D6C6; border-radius: 4px;
