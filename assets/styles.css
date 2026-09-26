@@ -579,6 +579,7 @@ table.classes .dot { display: inline-block; width: 12px; height: 12px; border-ra
 }
 .connectform__note a { color: var(--chartreuse); }
 
+
 @media (min-width: 1500px) {
   :root { --pad: 72px; }
   .hero__media { width: 44%; }
