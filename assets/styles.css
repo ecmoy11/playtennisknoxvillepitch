@@ -300,6 +300,9 @@ h3 { font-size: 22px; font-weight: 700; line-height: 1.25; }
 .quote { background: var(--tint); padding-top: 64px; padding-bottom: 64px; }
 .quote__inner { display: flex; gap: 40px; align-items: flex-start; }
 .quote__mark { font-family: "Instrument Serif", Georgia, serif; font-size: 110px; line-height: 0.8; color: var(--chartreuse); }
+/* a one-line pull quote can carry more size than a three-line one */
+.quote.quote--lead blockquote { font-size: clamp(28px, 3.6vw, 48px); line-height: 1.22; }
+.quote.quote--lead .quote__mark { font-size: 130px; }
 .quote blockquote {
   margin: 0;
   font-family: "Instrument Serif", Georgia, serif;
