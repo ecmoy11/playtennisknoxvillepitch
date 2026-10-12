@@ -491,7 +491,8 @@ const SPRITE = {
   soft:   [1.67, 1.94, 2.21, 2.48, 2.75, 3.02],
 };
 // How much to take the edge off. Lower `brightest`/`darkest` = duller, longer `attack` = softer front.
-const SOFTEN = { darkest: 1200, brightest: 3000, attack: 0.005, pitch: 0.94, volume: 1.0 };
+// useHard: false skips the two crackiest takes, so even a hard throw lands with a thud.
+const SOFTEN = { darkest: 600, brightest: 1500, attack: 0.012, pitch: 0.9, volume: 1.4, useHard: false };
 let audio = null, bounceBuf = null, lastThock = 0;
 const turn = { hard: 0, medium: 0, soft: 0 };
 // Downloaded when the 3D ball starts (47KB), decoded once the audio system exists.
@@ -549,7 +550,7 @@ function thock(speed) {
   if (now - lastThock < 0.04) return;                      // walls + floor at once: one sound
   lastThock = now;
 
-  const group = speed > 1700 ? 'hard' : speed > 700 ? 'medium' : 'soft';
+  const group = speed > 1700 && SOFTEN.useHard ? 'hard' : speed > 700 ? 'medium' : 'soft';
   const takes = SPRITE[group];
   const start = takes[turn[group]++ % takes.length];
 
