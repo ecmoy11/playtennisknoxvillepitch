@@ -48,7 +48,7 @@ const baseline = court.querySelector('.court__baseline');
 
 const HINTS = {
   docked: '',
-  out: 'Throw it around. Drag it back into the gap to put it back in play.',
+  out: 'The ball is out. Drag it back into the gap, or press the zero, to put it back.',
   back: 'Back in play.',
 };
 
@@ -145,6 +145,50 @@ function start() {
     wake();
   }
 
+  // ---------------------------------------------------------------- TILT (phones)
+  // G is the direction of gravity on screen: x right, y up. Straight down is (0, -1).
+  // On a phone we read how it is tilted (deviceorientation) and point gravity at the
+  // lowest edge of the screen, so tipping the phone rolls the ball around.
+  const G = { x: 0, y: -1 };
+  let tiltOn = false;
+
+  function onOrientation(e) {
+    if (e.beta == null || e.gamma == null) return;
+    const b = e.beta * Math.PI / 180, g = e.gamma * Math.PI / 180;
+    // Gravity in the phone's own frame (x to the right edge, y to the top edge).
+    let dx = Math.sin(g) * Math.cos(b), dy = -Math.sin(b);
+    // Turn that into screen directions if the phone is sideways.
+    const ang = ((screen.orientation && screen.orientation.angle) ?? window.orientation ?? 0) * Math.PI / 180;
+    const sx = dx * Math.cos(ang) - dy * Math.sin(ang);
+    const sy = dx * Math.sin(ang) + dy * Math.cos(ang);
+    // Holding a phone at a normal reading angle should still feel like full gravity,
+    // so boost it a bit. Lying flat on a table, gravity fades and the ball just drifts.
+    const k = Math.min(1, Math.hypot(sx, sy) * 1.4) / (Math.hypot(sx, sy) || 1);
+    const tx = sx * k, ty = sy * k;
+    const moved = Math.abs(tx - G.x) + Math.abs(ty - G.y) > 0.02;
+    G.x += (tx - G.x) * 0.25;                                  // smooth out sensor jitter
+    G.y += (ty - G.y) * 0.25;
+    tiltOn = true;
+    if (moved && S.mode === 'free') wake();
+  }
+
+  // iPhones only share motion data after asking, and the ask has to come from a tap.
+  // Android just sends it. Called on the first touch of the ball.
+  let tiltAsked = false;
+  function enableTilt() {
+    if (tiltAsked || !('DeviceOrientationEvent' in window) || !matchMedia('(pointer: coarse)').matches) return;
+    tiltAsked = true;
+    const listen = () => addEventListener('deviceorientation', onOrientation);
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission().then((r) => r === 'granted' && listen()).catch(() => {});
+    } else listen();
+  }
+  // Direction to throw the ball when you tap it: away from gravity, or up if the phone is flat.
+  const upDir = () => {
+    const m = Math.hypot(G.x, G.y);
+    return m > 0.3 ? { x: -G.x / m, y: -G.y / m } : { x: 0, y: 1 };
+  };
+
   // ---------------------------------------------------------------- 4. STATE
   const S = {
     mode: 'docked',        // 'docked' | 'free' | 'held' | 'returning'
@@ -178,41 +222,40 @@ function start() {
   function step(dt) {
     if (S.mode === 'free') {
       S.outFor += dt;
-      S.vy -= CONFIG.gravity * dt;
+      // Gravity is a direction, not just "down": on a phone it follows how the phone is tilted.
+      S.vx += CONFIG.gravity * G.x * dt;
+      S.vy += CONFIG.gravity * G.y * dt;
       const drag = Math.exp(-CONFIG.airDrag * dt);
-      S.vx *= drag;
+      S.vx *= drag; S.vy *= drag;
       S.x += S.vx * dt;
       S.y += S.vy * dt;
 
-      const minY = L.floor + L.r;
-      let onFloor = false;
-      if (S.y <= minY) {                                     // floor
-        S.y = minY;
-        onFloor = true;
-        if (S.vy < 0) {
-          const hit = -S.vy;
-          S.vy = hit > CONFIG.stopBelow ? hit * CONFIG.floorBounce : 0;
-          impact(hit, 'y', -1);
-        }
-      }
-      if (S.x < L.r)        { S.x = L.r;        if (S.vx < 0) { impact(-S.vx, 'x', -1); S.vx = -S.vx * CONFIG.wallBounce; } }
-      if (S.x > L.w - L.r)  { S.x = L.w - L.r;  if (S.vx > 0) { impact(S.vx, 'x', 1);   S.vx = -S.vx * CONFIG.wallBounce; } }
-      if (S.y > L.h - L.r)  { S.y = L.h - L.r;  if (S.vy > 0) S.vy = -S.vy * 0.5; }
+      // Four sides. Each one bounces the ball back and remembers if it is touching.
+      const lo = L.floor + L.r, hi = L.h - L.r, left = L.r, right = L.w - L.r;
+      const touch = { bottom: false, top: false, left: false, right: false };
+      const bounce = (speed, keep) => (speed > CONFIG.stopBelow ? speed * keep : 0);
+      if (S.y <= lo)    { S.y = lo;    touch.bottom = true; if (S.vy < 0) { impact(-S.vy, 'y', -1); S.vy =  bounce(-S.vy, CONFIG.floorBounce); } }
+      if (S.y >= hi)    { S.y = hi;    touch.top = true;    if (S.vy > 0) { impact(S.vy, 'y', 1);   S.vy = -bounce(S.vy, CONFIG.floorBounce); } }
+      if (S.x <= left)  { S.x = left;  touch.left = true;   if (S.vx < 0) { impact(-S.vx, 'x', -1); S.vx =  bounce(-S.vx, CONFIG.wallBounce); } }
+      if (S.x >= right) { S.x = right; touch.right = true;  if (S.vx > 0) { impact(S.vx, 'x', 1);   S.vx = -bounce(S.vx, CONFIG.wallBounce); } }
 
-      if (onFloor && S.vy === 0) {
-        // Rolling: friction slows it, and it spins exactly as fast as it travels (no slipping).
-        S.vx *= Math.exp(-CONFIG.rollFriction * dt);
-        if (Math.abs(S.vx) < 3) S.vx = 0;
-        S.spin.set(S.spin.x * Math.exp(-6 * dt), S.spin.y * Math.exp(-6 * dt), -S.vx / L.r);
-      } else {
-        S.spin.multiplyScalar(Math.exp(-0.25 * dt));         // spin fades slowly in the air
-      }
+      // Rolling along whichever side it is resting on: friction slows it, and it spins
+      // exactly as fast as it travels (no slipping). The sign depends on the side.
+      const roll = Math.exp(-CONFIG.rollFriction * dt);
+      const settle = (v) => (Math.abs(v) < 3 ? 0 : v);          // a little static friction
+      let rolling = false, wz = 0;
+      if (touch.bottom && S.vy === 0)     { S.vx = settle(S.vx * roll); wz = -S.vx / L.r; rolling = true; }
+      else if (touch.top && S.vy === 0)   { S.vx = settle(S.vx * roll); wz =  S.vx / L.r; rolling = true; }
+      else if (touch.left && S.vx === 0)  { S.vy = settle(S.vy * roll); wz =  S.vy / L.r; rolling = true; }
+      else if (touch.right && S.vx === 0) { S.vy = settle(S.vy * roll); wz = -S.vy / L.r; rolling = true; }
+      if (rolling) S.spin.set(S.spin.x * Math.exp(-6 * dt), S.spin.y * Math.exp(-6 * dt), wz);
+      else S.spin.multiplyScalar(Math.exp(-0.25 * dt));       // spin fades slowly in the air
 
       // Rolled or bounced back into the gap, slowly enough? It drops back in.
       // (Ignored for the first second, or it would drop straight back in as it pops out.)
       if (S.outFor > 1 && Math.hypot(S.x - L.slotX, S.y - L.slotY) < L.r * 0.5 && Math.hypot(S.vx, S.vy) < 900) putBack();
 
-      if (onFloor && S.vx === 0 && S.vy === 0 && Math.abs(S.sq) < 0.001) S.asleep = true;
+      if (rolling && S.vx === 0 && S.vy === 0 && Math.abs(S.sq) < 0.001) S.asleep = true;
     }
 
     if (S.mode === 'returning') {
@@ -255,8 +298,9 @@ function start() {
   }
 
   function drop() {                                          // tapped while sitting in the 404
-    S.vx = (Math.random() < 0.5 ? -1 : 1) * (80 + Math.random() * 120);
-    S.vy = CONFIG.popUp;
+    const up = upDir(), side = (Math.random() < 0.5 ? -1 : 1) * (80 + Math.random() * 120);
+    S.vx = up.x * CONFIG.popUp + up.y * side;                // pop away from gravity, a little sideways
+    S.vy = up.y * CONFIG.popUp - up.x * side;
     S.spin.set(Math.random() - 0.5, Math.random() - 0.5, -S.vx / L.r);
     setMode('free');
     say('out');
@@ -286,6 +330,7 @@ function start() {
     e.preventDefault();
     court.setPointerCapture(e.pointerId);
     unlockAudio();
+    enableTilt();
     Object.assign(P, { id: e.pointerId, downX: p.x, downY: p.y, offX: S.x - p.x, offY: S.y - p.y, moved: false });
     P.samples = [{ t: e.timeStamp, x: p.x, y: p.y }];
   });
@@ -327,8 +372,9 @@ function start() {
     if (!P.moved) {                                          // a tap
       if (S.mode === 'docked') drop();
       else if (S.mode === 'free') {
-        S.vy = Math.max(S.vy, 0) + CONFIG.hop;
-        S.vx += (S.x - P.downX) * 8;                         // tap the left side, it goes right
+        const up = upDir();
+        S.vx += up.x * CONFIG.hop + (S.x - P.downX) * 8;     // tap the left side, it goes right
+        S.vy += up.y * CONFIG.hop + (S.y - P.downY) * 8;
         wake();
       }
       return;
@@ -386,7 +432,7 @@ function start() {
     else squash.scale.set(r * (1 - a), r * (1 + a / 2), r * (1 + a / 2));
     // Keep the contact side planted while it flattens.
     const offX = S.sqAxis === 'x' ? S.sqSide * L.r * a : 0;
-    const offY = S.sqAxis === 'y' && S.mode === 'free' ? -L.r * a : 0;
+    const offY = S.sqAxis === 'y' && S.mode === 'free' ? S.sqSide * L.r * a : 0;
     root.position.set(S.x + offX, S.y + offY, 0);
 
     // Shadow grows and fades as the ball rises.
@@ -394,7 +440,7 @@ function start() {
     const fade = clamp(1 - height / (L.h * 0.75), 0, 1);
     shadow.position.set(S.x, L.floor, -500);
     shadow.scale.set(L.r * 2.0 * (1 + height / 1400), L.r * 0.34 * (1 + height / 1400), 1);
-    shadow.material.opacity = 0.4 * fade * fade * (S.mode === 'docked' || S.mode === 'returning' ? 0 : 1);
+    shadow.material.opacity = 0.4 * fade * fade * Math.max(0, -G.y) * (S.mode === 'docked' || S.mode === 'returning' ? 0 : 1);
 
     renderer.render(scene, camera);
   }
@@ -432,6 +478,8 @@ const SPRITE = {
   medium: [0.59, 0.86, 1.13, 1.4],
   soft:   [1.67, 1.94, 2.21, 2.48, 2.75, 3.02],
 };
+// How much to take the edge off. Lower `brightest`/`darkest` = duller, longer `attack` = softer front.
+const SOFTEN = { darkest: 900, brightest: 2600, attack: 0.006, pitch: 0.92, volume: 0.5 };
 let audio = null, bounceBuf = null, lastThock = 0;
 const turn = { hard: 0, medium: 0, soft: 0 };
 // Downloaded when the 3D ball starts (47KB), decoded once the audio system exists.
@@ -470,12 +518,21 @@ function thock(speed) {
   const takes = SPRITE[group];
   const start = takes[turn[group]++ % takes.length];
 
+  const level = Math.min(1, Math.max(0.1, speed / 2400));  // 0.1 (gentle) .. 1 (hard)
   const src = audio.createBufferSource();
   src.buffer = bounceBuf;
-  src.playbackRate.value = 0.96 + Math.random() * 0.08;    // tiny pitch wobble, sounds less canned
+  src.playbackRate.value = SOFTEN.pitch * (0.97 + Math.random() * 0.06); // slightly lower, a little wobble
+  // Softening: a low-pass filter takes the bright "crack" off the top. Harder hits get
+  // a bit more brightness back, softer ones are duller, like a real ball.
+  const tone = audio.createBiquadFilter();
+  tone.type = 'lowpass';
+  tone.frequency.value = SOFTEN.darkest + (SOFTEN.brightest - SOFTEN.darkest) * level;
+  tone.Q.value = 0.5;
+  // A few milliseconds of fade-in rounds off the sharp front edge of the hit.
   const gain = audio.createGain();
-  gain.gain.value = Math.min(1, Math.max(0.1, speed / 2400)) * 0.7;
-  src.connect(gain).connect(audio.destination);
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(level * SOFTEN.volume, now + SOFTEN.attack);
+  src.connect(tone).connect(gain).connect(audio.destination);
   src.start(now, start, SPRITE.clip);
 }
 

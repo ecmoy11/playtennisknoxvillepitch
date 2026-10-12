@@ -84,6 +84,7 @@ Change them there and the whole site follows.
 GitHub Pages serves `404.html` automatically for any URL that does not exist, so a mistyped link lands there. The "0" is a 3D tennis ball. On a computer, moving the mouse over it knocks it out and it drops to the floor. On a phone, tap it. Grab it and throw it, tap it to make it hop, and drag it back into the gap (or click the dashed outline) to put it back. Keyboard users can press Enter on the zero to do the same.
 
 - Every number worth tuning is in `CONFIG` at the top of `assets/ball404.js`: gravity, bounce, friction, squash, throw speed.
+- On phones, the ball follows gravity: tilt the phone and it rolls toward the low edge. iPhones ask for motion permission the first time you touch the ball.
 - The floor is the invisible `.court__baseline` element. Move it in CSS and the physics follows.
 - People with reduced motion turned on, or browsers without WebGL, see the static ball image and nothing moves.
 - Add `?debug` to the URL to expose the ball state as `window.__ball` in the console.
