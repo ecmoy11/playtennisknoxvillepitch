@@ -47,7 +47,7 @@ const soundBtn = document.getElementById('ballSound');
 const baseline = court.querySelector('.court__baseline');
 
 const HINTS = {
-  docked: 'Psst. The zero is a tennis ball. Give it a tap.',
+  docked: '',
   out: 'Throw it around. Drag it back into the gap to put it back in play.',
   back: 'Back in play.',
 };
@@ -246,6 +246,7 @@ function start() {
   }
 
   function putBack() {
+    hoverArmed = false;
     S.ret = { t: 0, fromX: S.x, fromY: S.y };
     S.vx = S.vy = 0;
     setMode('returning');
@@ -263,6 +264,12 @@ function start() {
   // The canvas ignores the mouse (pointer-events: none) so buttons and links still work.
   // Instead the court listens, and only claims the pointer when it lands on the ball.
   const P = { id: null, downX: 0, downY: 0, offX: 0, offY: 0, moved: false, samples: [] };
+
+  // On a computer with a mouse, just moving over the ball knocks it out of the 404.
+  // It re-arms only after the mouse has left the ball, so putting it back doesn't
+  // immediately knock it out again.
+  const mouseHover = matchMedia('(hover: hover) and (pointer: fine)').matches;
+  let hoverArmed = true;
 
   const toWorld = (e) => {
     const c = court.getBoundingClientRect();
@@ -285,6 +292,10 @@ function start() {
     const p = toWorld(e);
     if (P.id === null) {                                     // just hovering
       const over = overBall(p) && S.mode !== 'returning';
+      if (mouseHover && e.pointerType === 'mouse') {
+        if (!over) hoverArmed = true;
+        else if (hoverArmed && S.mode === 'docked') { hoverArmed = false; drop(); return; }
+      }
       court.style.cursor = over ? 'grab' : '';
       court.classList.toggle('is-hover', over);
       return;

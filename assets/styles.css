@@ -760,24 +760,13 @@ table.classes .dot { display: inline-block; width: 12px; height: 12px; border-ra
   pointer-events: none;    /* clicks fall through to the page; ball.js hit-tests the ball itself */
 }
 
-/* The floor. ball404.js reads its position, so moving this moves the floor. */
+/* The floor. Invisible, but ball404.js reads its position, so moving this moves the floor. */
 .court__baseline {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 40px;
-  height: 2px;
-  background: rgba(0, 58, 124, 0.14);
-}
-.court__baseline span {
-  position: absolute;
-  right: var(--pad);
-  top: 10px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--muted-light);
+  height: 0;              /* invisible: it only marks where the floor is */
 }
 .court__sound {
   position: absolute;
