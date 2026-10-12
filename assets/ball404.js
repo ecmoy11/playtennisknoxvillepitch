@@ -59,6 +59,7 @@ function hasWebGL() {
 
 function start() {
   spriteBytes = fetch(SPRITE.url).then((r) => r.arrayBuffer()).catch(() => null);
+  initAudio();
 
   // ---------------------------------------------------------------- 2. SETUP
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
@@ -490,7 +491,7 @@ const SPRITE = {
   soft:   [1.67, 1.94, 2.21, 2.48, 2.75, 3.02],
 };
 // How much to take the edge off. Lower `brightest`/`darkest` = duller, longer `attack` = softer front.
-const SOFTEN = { darkest: 900, brightest: 2600, attack: 0.006, pitch: 0.92, volume: 0.5 };
+const SOFTEN = { darkest: 1200, brightest: 3000, attack: 0.005, pitch: 0.94, volume: 1.0 };
 let audio = null, bounceBuf = null, lastThock = 0;
 const turn = { hard: 0, medium: 0, soft: 0 };
 // Downloaded when the 3D ball starts (47KB), decoded once the audio system exists.
@@ -509,18 +510,41 @@ function syncSoundBtn() {
   soundBtn.querySelector('span').textContent = soundOn ? 'Sound on' : 'Sound off';
 }
 
-function unlockAudio() {           // browsers only allow audio after a user gesture
-  if (!audio) {
-    try { audio = new AudioContext(); } catch { audio = null; return; }
-    spriteBytes.then((bytes) => bytes && audio.decodeAudioData(bytes))
-      .then((buf) => { bounceBuf = buf || null; })
-      .catch(() => {});
-  }
+// Browsers keep sound switched off until the visitor clicks or taps something on the page.
+// So: create the audio system as soon as the ball starts (and decode the sound straight away),
+// then switch it on at the first click, tap or key press ANYWHERE on the page.
+// Chrome also allows sound from the start if the visitor got here by clicking a link on this
+// same site, which is exactly how most people reach a 404, so then even the hover drop is heard.
+function initAudio() {
+  if (audio) return;
+  try { audio = new AudioContext(); } catch { audio = null; return; }
+  spriteBytes.then((bytes) => bytes && audio.decodeAudioData(bytes))
+    .then((buf) => { bounceBuf = buf || null; })
+    .catch(() => {});
+  const unlockEvents = ['pointerdown', 'touchend', 'keydown', 'click'];
+  const onGesture = () => {
+    unlockAudio();
+    if (audio.state === 'running') unlockEvents.forEach((t) => removeEventListener(t, onGesture, true));
+  };
+  unlockEvents.forEach((t) => addEventListener(t, onGesture, true));
+}
+
+function unlockAudio() {
+  if (!audio) initAudio();
+  if (!audio || audio.state === 'running') return;
   audio.resume?.();
+  // Older iPhones only wake up after something actually plays inside the tap: one silent sample.
+  try {
+    const s = audio.createBufferSource();
+    s.buffer = audio.createBuffer(1, 1, audio.sampleRate);
+    s.connect(audio.destination);
+    s.start(0);
+  } catch {}
 }
 
 function thock(speed) {
-  if (!soundOn || !audio || !bounceBuf || speed < 140) return;
+  if (!soundOn || !audio || audio.state !== 'running' || !bounceBuf || speed < 140) return;
+  if (window.__ball) window.__ball.sounds = (window.__ball.sounds || 0) + 1;
   const now = audio.currentTime;
   if (now - lastThock < 0.04) return;                      // walls + floor at once: one sound
   lastThock = now;
