@@ -172,16 +172,18 @@ function start() {
     if (moved && S.mode === 'free') wake();
   }
 
-  // iPhones only share motion data after asking, and the ask has to come from a tap.
-  // Android just sends it. Called on the first touch of the ball.
-  let tiltAsked = false;
+  // iPhones only share motion data after asking. Safari only lets a page ask from the END
+  // of a tap (touchend or click). Asking from touchstart/pointerdown is silently refused,
+  // which is why this runs on touchend below. Android just sends the data.
+  let tiltState = 'idle';                                    // 'idle' | 'asking' | 'done'
   function enableTilt() {
-    if (tiltAsked || !('DeviceOrientationEvent' in window) || !matchMedia('(pointer: coarse)').matches) return;
-    tiltAsked = true;
+    if (tiltState !== 'idle' || !('DeviceOrientationEvent' in window) || !matchMedia('(pointer: coarse)').matches) return;
     const listen = () => addEventListener('deviceorientation', onOrientation);
-    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-      DeviceOrientationEvent.requestPermission().then((r) => r === 'granted' && listen()).catch(() => {});
-    } else listen();
+    if (typeof DeviceOrientationEvent.requestPermission !== 'function') { tiltState = 'done'; listen(); return; }
+    tiltState = 'asking';
+    DeviceOrientationEvent.requestPermission()
+      .then((r) => { tiltState = 'done'; if (r === 'granted') listen(); })   // allowed or refused: don't nag
+      .catch(() => { tiltState = 'idle'; });                 // not counted as a tap: try again next time
   }
   // Direction to throw the ball when you tap it: away from gravity, or up if the phone is flat.
   const upDir = () => {
@@ -330,7 +332,6 @@ function start() {
     e.preventDefault();
     court.setPointerCapture(e.pointerId);
     unlockAudio();
-    enableTilt();
     Object.assign(P, { id: e.pointerId, downX: p.x, downY: p.y, offX: S.x - p.x, offY: S.y - p.y, moved: false });
     P.samples = [{ t: e.timeStamp, x: p.x, y: p.y }];
   });
@@ -395,10 +396,20 @@ function start() {
   court.addEventListener('pointercancel', release);
 
   // On touch screens, stop the page scrolling only when the finger lands on the ball.
+  let touchOnBall = false;
   court.addEventListener('touchstart', (e) => {
     const t = e.touches[0];
-    if (t && overBall(toWorld(t))) e.preventDefault();
+    touchOnBall = !!t && overBall(toWorld(t));
+    if (touchOnBall) e.preventDefault();
   }, { passive: false });
+  // The end of a touch on the ball is what Safari counts as a real tap: ask for motion
+  // here, and unlock sound here too (iOS has the same rule for audio).
+  court.addEventListener('touchend', () => {
+    if (!touchOnBall) return;
+    touchOnBall = false;
+    unlockAudio();
+    enableTilt();
+  });
 
   // Keyboard and the ghost outline: the slot is a real button.
   slot.addEventListener('click', (e) => {
