@@ -8,7 +8,7 @@
      5. PHYSICS       gravity, bounces, rolling, squash. Runs at a fixed 120 steps a second
      6. INPUT         grab, throw, tap, keyboard
      7. RENDER LOOP   draws a frame, pauses when the court is off screen
-     8. SOUND         a synthesized "thock". Swap in a real recording later
+     8. SOUND         real court bounces, cut into a small audio sprite
 
    Coordinates: the world is measured in CSS pixels. x goes right, y goes UP, and (0,0)
    is the bottom-left corner of the court. The camera is orthographic, so a ball at
@@ -58,6 +58,8 @@ function hasWebGL() {
 }
 
 function start() {
+  spriteBytes = fetch(SPRITE.url).then((r) => r.arrayBuffer()).catch(() => null);
+
   // ---------------------------------------------------------------- 2. SETUP
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));   // 3x screens cost a lot for no visible gain
@@ -418,9 +420,23 @@ function start() {
 }
 
 // ------------------------------------------------------------------ 8. SOUND
-// A short felt "thock": a burst of filtered noise plus a low thump that drops in pitch.
-// Volume follows impact speed. Replace with your own court recording when you have it.
-let audio = null, lastThock = 0;
+// bounce.mp3 is an "audio sprite": 12 single bounces from an indoor hard-court recording,
+// back to back, each about 0.2s. The physics already makes each bounce weaker than the last,
+// so we play ONE hit per impact: a hard hit for fast impacts, softer hits as it dies down.
+// That keeps the sound in sync with what you see, which a full recording never would.
+// Several takes per group, rotated, so repeated bounces don't sound like a machine gun.
+const SPRITE = {
+  url: 'assets/ball/bounce.mp3',
+  clip: 0.22,                                              // seconds per hit
+  hard:   [0.05, 0.32],
+  medium: [0.59, 0.86, 1.13, 1.4],
+  soft:   [1.67, 1.94, 2.21, 2.48, 2.75, 3.02],
+};
+let audio = null, bounceBuf = null, lastThock = 0;
+const turn = { hard: 0, medium: 0, soft: 0 };
+// Downloaded when the 3D ball starts (47KB), decoded once the audio system exists.
+let spriteBytes = Promise.resolve(null);
+
 let soundOn = CONFIG.sound;
 try { if (localStorage.getItem('ptk-ball-sound') === 'off') soundOn = false; } catch {}
 syncSoundBtn();
@@ -435,32 +451,32 @@ function syncSoundBtn() {
 }
 
 function unlockAudio() {           // browsers only allow audio after a user gesture
-  if (!audio) { try { audio = new AudioContext(); } catch { audio = null; } }
-  audio?.resume?.();
+  if (!audio) {
+    try { audio = new AudioContext(); } catch { audio = null; return; }
+    spriteBytes.then((bytes) => bytes && audio.decodeAudioData(bytes))
+      .then((buf) => { bounceBuf = buf || null; })
+      .catch(() => {});
+  }
+  audio.resume?.();
 }
 
 function thock(speed) {
-  if (!soundOn || !audio || speed < 140) return;
+  if (!soundOn || !audio || !bounceBuf || speed < 140) return;
   const now = audio.currentTime;
-  if (now - lastThock < 0.04) return;
+  if (now - lastThock < 0.04) return;                      // walls + floor at once: one sound
   lastThock = now;
-  const vol = Math.min(1, speed / 2600) * 0.32;
 
-  const len = Math.floor(audio.sampleRate * 0.05);
-  const buf = audio.createBuffer(1, len, audio.sampleRate);
-  const d = buf.getChannelData(0);
-  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
-  const noise = audio.createBufferSource(); noise.buffer = buf;
-  const band = audio.createBiquadFilter(); band.type = 'bandpass'; band.frequency.value = 1100; band.Q.value = 0.9;
-  const ng = audio.createGain(); ng.gain.setValueAtTime(vol * 0.6, now); ng.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
-  noise.connect(band).connect(ng).connect(audio.destination);
+  const group = speed > 1700 ? 'hard' : speed > 700 ? 'medium' : 'soft';
+  const takes = SPRITE[group];
+  const start = takes[turn[group]++ % takes.length];
 
-  const osc = audio.createOscillator(); osc.type = 'sine';
-  osc.frequency.setValueAtTime(190, now); osc.frequency.exponentialRampToValueAtTime(85, now + 0.08);
-  const og = audio.createGain(); og.gain.setValueAtTime(vol, now); og.gain.exponentialRampToValueAtTime(0.0001, now + 0.1);
-  osc.connect(og).connect(audio.destination);
-
-  noise.start(now); osc.start(now); osc.stop(now + 0.11);
+  const src = audio.createBufferSource();
+  src.buffer = bounceBuf;
+  src.playbackRate.value = 0.96 + Math.random() * 0.08;    // tiny pitch wobble, sounds less canned
+  const gain = audio.createGain();
+  gain.gain.value = Math.min(1, Math.max(0.1, speed / 2400)) * 0.7;
+  src.connect(gain).connect(audio.destination);
+  src.start(now, start, SPRITE.clip);
 }
 
 // ------------------------------------------------------------------ go
