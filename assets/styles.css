@@ -669,3 +669,141 @@ table.classes .dot { display: inline-block; width: 12px; height: 12px; border-ra
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* ---------- 404: the court ----------
+   The stage the ball lives in. The canvas covers the whole court; the ball can roam
+   anywhere inside it and lands on the baseline at the bottom. */
+.court {
+  position: relative;
+  min-height: calc(100svh - 89px);       /* viewport minus the sticky header */
+  display: flex;
+  align-items: center;
+  padding: 48px 0 120px;                 /* bottom room so the ball has a floor to roll on */
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.court__inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 56px;
+}
+.court__score {
+  display: flex;
+  align-items: flex-end;
+  font-weight: 900;
+  font-size: clamp(132px, 21vw, 340px);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--navy);
+}
+.court__digit { display: block; }
+/* The slot is the "0". It is sized in em so it scales with the digits.
+   --ball sets its diameter; --sit lifts it so its bottom lands on the digits' baseline. */
+.court__slot {
+  --ball: 0.70em;
+  --sit: 0.172em;
+  position: relative;
+  flex: none;
+  width: var(--ball);
+  height: var(--ball);
+  margin: 0 0.035em var(--sit);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  font-size: inherit;
+}
+.court__slot:focus-visible { outline: 3px solid var(--navy); outline-offset: 6px; }
+.court__fallback {
+  width: 100%;
+  height: 100%;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+.court.is-3d .court__fallback { opacity: 0; }
+/* Ghost outline that shows where the ball goes back. */
+.court__slot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 0.012em dashed rgba(0, 58, 124, 0.35);
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.court.is-out .court__slot::after { opacity: 1; transform: scale(1); }
+.court.is-out .court__slot:hover::after { border-color: rgba(0, 58, 124, 0.6); }
+
+.court__copy h1 { color: var(--navy); margin-top: 14px; }
+.court__copy .lede { margin-top: 16px; max-width: 34em; }
+.court__copy .btnrow { margin-top: 28px; }
+.court__hint {
+  margin: 22px 0 0;
+  min-height: 1.6em;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.court__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;              /* above the copy, so the ball rolls in front of it */
+  pointer-events: none;    /* clicks fall through to the page; ball.js hit-tests the ball itself */
+}
+
+/* The floor. ball404.js reads its position, so moving this moves the floor. */
+.court__baseline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 40px;
+  height: 2px;
+  background: rgba(0, 58, 124, 0.14);
+}
+.court__baseline span {
+  position: absolute;
+  right: var(--pad);
+  top: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted-light);
+}
+.court__sound {
+  position: absolute;
+  z-index: 3;
+  left: var(--pad);
+  bottom: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  font: 700 11px/1 Archivo, sans-serif;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted-light);
+  cursor: pointer;
+}
+.court__sound svg { width: 14px; height: 14px; fill: currentColor; }
+.court__sound[aria-pressed="false"] .wave { display: none; }
+.court__sound:hover { color: var(--navy); }
+
+@media (max-width: 900px) {
+  .court { align-items: flex-start; padding-top: 32px; }
+  .court__inner { grid-template-columns: 1fr; gap: 20px; }
+  .court__score { font-size: clamp(120px, 38vw, 260px); }
+}
+.court__sound[hidden] { display: none; }
+.court:not(.is-3d) .court__slot { cursor: default; }

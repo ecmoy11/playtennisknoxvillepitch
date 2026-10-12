@@ -11,10 +11,14 @@ index.html      Home
 register.html   Calendar — every program open right now
 juniors.html    Juniors section hub
 program.html    Junior Lessons & Clinics detail
+404.html        Page not found, with the interactive tennis ball
 assets/
   styles.css    All the styling. Design tokens are at the top in :root
   nav.js        Mobile menu toggle + the demo filter buttons
   logo.png      The new wordmark
+  ball404.js    The 404 ball: three.js scene, physics, grab and throw, sound
+  ball/         Ball textures (color, normal, roughness) and the static fallback image
+  vendor/       three.js r170, kept in the repo so the page has no CDN dependency
 .nojekyll       Tells GitHub Pages to serve the files as-is
 ```
 
@@ -74,6 +78,17 @@ Everything comes from custom properties at the top of `assets/styles.css`:
 ```
 
 Change them there and the whole site follows.
+
+## The 404 page
+
+GitHub Pages serves `404.html` automatically for any URL that does not exist, so a mistyped link lands there. The "0" is a 3D tennis ball. Tap it and it drops onto the baseline. Grab it and throw it, tap it to make it hop, and drag it back into the gap (or click the dashed outline) to put it back. Keyboard users can press Enter on the zero to do the same.
+
+- Every number worth tuning is in `CONFIG` at the top of `assets/ball404.js`: gravity, bounce, friction, squash, throw speed.
+- The floor is the `.court__baseline` line. Move it in CSS and the physics follows.
+- People with reduced motion turned on, or browsers without WebGL, see the static ball image and nothing moves.
+- Add `?debug` to the URL to expose the ball state as `window.__ball` in the console.
+- The bounce sound is synthesized. Replace `thock()` with a real recording when there is one.
+- Weight: three.js is about 170KB gzipped, the textures about 200KB. It only loads on this page.
 
 ## Notes on how it is built
 
