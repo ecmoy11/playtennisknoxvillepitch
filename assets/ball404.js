@@ -478,23 +478,22 @@ function start() {
 }
 
 // ------------------------------------------------------------------ 8. SOUND
-// bounce.mp3 is an "audio sprite": 12 single bounces from an indoor hard-court recording,
-// back to back, each about 0.2s. The physics already makes each bounce weaker than the last,
-// so we play ONE hit per impact: a hard hit for fast impacts, softer hits as it dies down.
-// That keeps the sound in sync with what you see, which a full recording never would.
-// Several takes per group, rotated, so repeated bounces don't sound like a machine gun.
+// bounce.mp3 is an "audio sprite": 7 single hits from a hard-court recording, back to back,
+// each 0.25s, all evened out to the same loudness. The recording itself doesn't get quieter,
+// so the fade comes from here: every impact plays one hit, and its volume and brightness
+// follow how hard the ball actually landed. Each bounce lands softer than the last, so the
+// sound dies away in step with what you see. Takes rotate so it doesn't sound copy-pasted.
 const SPRITE = {
   url: 'assets/ball/bounce.mp3',
-  clip: 0.22,                                              // seconds per hit
-  hard:   [0.05, 0.32],
-  medium: [0.59, 0.86, 1.13, 1.4],
-  soft:   [1.67, 1.94, 2.21, 2.48, 2.75, 3.02],
+  clip: 0.25,                                              // seconds per hit
+  takes: [0.05, 0.35, 0.65, 0.95, 1.25, 1.55, 1.85],
 };
-// How much to take the edge off. Lower `brightest`/`darkest` = duller, longer `attack` = softer front.
-// useHard: false skips the two crackiest takes, so even a hard throw lands with a thud.
-const SOFTEN = { darkest: 600, brightest: 1500, attack: 0.012, pitch: 0.9, volume: 1.4, useHard: false };
+// fullSpeed: impact speed (px/s) that plays at full volume.
+// curve: how fast quiet bounces fade. 1 = straight line, higher = small bounces drop off faster.
+// darkest/brightest: low-pass range, so little bounces also sound smaller, not just quieter.
+const VOLUME = { fullSpeed: 2400, curve: 1.5, max: 0.9, darkest: 2500, brightest: 7000 };
 let audio = null, bounceBuf = null, lastThock = 0;
-const turn = { hard: 0, medium: 0, soft: 0 };
+let turn = 0;
 // Downloaded when the 3D ball starts (47KB), decoded once the audio system exists.
 let spriteBytes = Promise.resolve(null);
 
@@ -550,24 +549,16 @@ function thock(speed) {
   if (now - lastThock < 0.04) return;                      // walls + floor at once: one sound
   lastThock = now;
 
-  const group = speed > 1700 && SOFTEN.useHard ? 'hard' : speed > 700 ? 'medium' : 'soft';
-  const takes = SPRITE[group];
-  const start = takes[turn[group]++ % takes.length];
-
-  const level = Math.min(1, Math.max(0.1, speed / 2400));  // 0.1 (gentle) .. 1 (hard)
+  const start = SPRITE.takes[turn++ % SPRITE.takes.length];
+  const level = Math.min(1, Math.max(0.05, speed / VOLUME.fullSpeed));   // 0.05 .. 1
   const src = audio.createBufferSource();
   src.buffer = bounceBuf;
-  src.playbackRate.value = SOFTEN.pitch * (0.97 + Math.random() * 0.06); // slightly lower, a little wobble
-  // Softening: a low-pass filter takes the bright "crack" off the top. Harder hits get
-  // a bit more brightness back, softer ones are duller, like a real ball.
+  src.playbackRate.value = 0.97 + Math.random() * 0.06;   // tiny pitch wobble
   const tone = audio.createBiquadFilter();
   tone.type = 'lowpass';
-  tone.frequency.value = SOFTEN.darkest + (SOFTEN.brightest - SOFTEN.darkest) * level;
-  tone.Q.value = 0.5;
-  // A few milliseconds of fade-in rounds off the sharp front edge of the hit.
+  tone.frequency.value = VOLUME.darkest + (VOLUME.brightest - VOLUME.darkest) * level;
   const gain = audio.createGain();
-  gain.gain.setValueAtTime(0, now);
-  gain.gain.linearRampToValueAtTime(level * SOFTEN.volume, now + SOFTEN.attack);
+  gain.gain.value = Math.pow(level, VOLUME.curve) * VOLUME.max;
   src.connect(tone).connect(gain).connect(audio.destination);
   src.start(now, start, SPRITE.clip);
 }

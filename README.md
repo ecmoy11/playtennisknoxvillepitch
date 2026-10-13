@@ -88,7 +88,7 @@ GitHub Pages serves `404.html` automatically for any URL that does not exist, so
 - The floor is the invisible `.court__baseline` element. Move it in CSS and the physics follows.
 - People with reduced motion turned on, or browsers without WebGL, see the static ball image and nothing moves.
 - Add `?debug` to the URL to expose the ball state as `window.__ball` in the console.
-- The bounce sound is `assets/ball/bounce.mp3`: 12 single hits cut from an Epidemic Sound indoor hard-court recording. Each impact plays one hit, hard to soft depending on speed. The offsets are in `SPRITE` in `ball404.js`.
+- The bounce sound is `assets/ball/bounce.mp3`: 7 single hits cut from an Epidemic Sound hard-court recording, evened out to the same loudness. Each impact plays one hit, and `VOLUME` in `ball404.js` sets how loudness and brightness fall off as the bounces get smaller.
 - Weight: three.js is about 170KB gzipped, the textures about 200KB. It only loads on this page.
 
 ## Notes on how it is built
